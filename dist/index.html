@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5e6e8">
+  <meta name="description" content="把工作的每一刻，变成看得见的收入。自定义工资和排班的玻璃质感攒钱钟。">
+  <title>上班攒钱钟</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wallpaper" aria-hidden="true"></div>
+  <main class="app-shell" aria-label="上班攒钱钟">
+    <header class="app-header">
+      <div class="heading"><span class="app-icon" id="header-icon" aria-hidden="true"></span><h1 id="page-title">上班攒钱钟</h1></div>
+      <div class="header-actions"><button class="icon-button" id="floating-button" aria-label="小窗模式" title="小窗模式"></button><button class="icon-button" id="header-action" aria-label="打开设置" title="设置"></button></div>
+    </header>
+    <p class="date-line" id="date-line"></p>
+    <div class="view-host">
+      <section id="today-view" class="view" aria-label="今天">
+        <div class="glass clock-panel">
+          <div class="work-status"><span class="status-dot" id="status-dot"></span><span id="work-status">上班中</span></div>
+          <h2 class="eyebrow">今日已赚</h2>
+          <div class="earnings" id="earnings" aria-label="今日已赚金额"><span class="currency" id="amount-symbol">¥</span><span id="amount-integer">0</span><span class="decimal" id="amount-decimal">.00</span></div>
+          <div id="home-unit" class="segmented unit-segment" role="group" aria-label="显示单位"></div>
+          <div class="clock-divider"></div>
+          <h2 class="eyebrow countdown-label" id="countdown-label">距离下班</h2>
+          <div class="countdown" id="countdown">00:00:00</div>
+          <div class="progress-row"><div class="progress-track" role="progressbar" aria-label="今日工作进度" aria-valuemin="0" aria-valuemax="100" id="progress"><span id="progress-fill"></span></div><span id="progress-text">0%</span></div>
+          <div class="hours-row"><span>已工作 <strong id="worked-hours">0.00</strong> 小时</span><span>今日 <strong id="daily-hours">7.5</strong> 小时</span></div>
+        </div>
+        <button class="glass month-preview" id="month-preview" aria-label="查看本月收入">
+          <span class="preview-copy"><span class="muted preview-label">本月累计</span><span class="preview-money"><small>¥</small><span id="month-amount">0.00</span></span></span>
+          <svg id="mini-chart" class="mini-chart" viewBox="0 0 180 76" aria-label="本月收入走势" role="img"></svg>
+        </button>
+        <div class="glass metric-strip">
+          <div><span class="muted">时薪</span><span><small>¥</small><strong id="hourly-pay">0.00</strong></span></div>
+          <div><span class="muted">日薪</span><span><small>¥</small><strong id="daily-pay">0.00</strong></span></div>
+        </div>
+      </section>
+      <section id="month-view" class="view" aria-label="本月收入" hidden>
+        <div class="glass monthly-panel">
+          <h2 class="month-title" id="chart-month"></h2><p class="eyebrow">本月累计</p>
+          <div class="month-total"><small>¥</small><span id="selected-month-total">0.00</span></div>
+          <svg id="month-chart" class="month-chart" viewBox="0 0 400 130" role="img" aria-label="本月累计收入曲线"></svg>
+          <div class="chart-axis" id="chart-axis"></div>
+        </div>
+        <div class="glass calendar-panel">
+          <div class="calendar-header"><button class="calendar-arrow" id="prev-month" aria-label="上个月"></button><h2 id="calendar-month"></h2><button class="calendar-arrow" id="next-month" aria-label="下个月"></button></div>
+          <div class="calendar-week" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+          <div id="calendar-grid" class="calendar-grid" role="grid" aria-label="排班日历"></div>
+          <div id="calendar-selection" class="calendar-selection"></div>
+        </div>
+        <div class="glass metric-strip monthly-metrics"><div><span class="muted">工作日</span><span><strong id="selected-workdays">0</strong><small> 天</small></span></div><div><span class="muted">本月预计</span><span><small>¥</small><strong id="month-estimate">0</strong></span></div></div>
+      </section>
+      <section id="settings-view" class="view" aria-label="工资与排班" hidden>
+        <form id="settings-form" class="glass settings-panel" novalidate>
+          <label class="field-label" for="salary">月薪 (元)</label>
+          <input class="salary-input" id="salary" name="salary" type="number" inputmode="decimal" min="0.01" max="100000000" step="0.01" required>
+          <fieldset class="field-group"><legend class="field-label">工作日</legend><div id="work-mode" class="segmented" role="group" aria-label="工作日模式"></div><div id="custom-days" class="custom-days" role="group" aria-label="选择工作日" hidden></div></fieldset>
+          <div class="field-pair"><label><span class="field-label">上班</span><input type="time" id="start-time" name="start" required aria-label="上班时间"></label><label><span class="field-label">下班</span><input type="time" id="end-time" name="end" required aria-label="下班时间"></label></div>
+          <div class="break-label"><label class="field-label" for="break-toggle">午休</label><button id="break-toggle" class="switch" type="button" role="switch" aria-checked="true" aria-label="扣除午休"><span></span></button></div>
+          <div class="field-pair" id="break-times"><label><span class="sr-only">午休开始</span><input type="time" id="break-start" name="breakStart" aria-label="午休开始"></label><label><span class="sr-only">午休结束</span><input type="time" id="break-end" name="breakEnd" aria-label="午休结束"></label></div>
+          <p class="schedule-summary" id="schedule-summary"></p>
+          <div class="form-divider"></div>
+          <fieldset class="field-group"><legend class="field-label">金额跳动</legend><div id="step-mode" class="segmented" role="group" aria-label="金额跳动幅度"></div></fieldset>
+          <fieldset class="field-group unit-field"><legend class="field-label">显示单位</legend><div id="settings-unit" class="segmented" role="group" aria-label="设置显示单位"></div></fieldset>
+          <p id="form-error" class="form-error" role="alert" hidden></p>
+          <button type="submit" class="save-button" id="save-settings">保存设置<span class="button-shine" aria-hidden="true"></span></button>
+        </form>
+        <div class="settings-links"><button type="button" id="floating-help">小窗与桌面版</button><details class="calculation-note"><summary>计算口径</summary><p>月薪 ÷ 当月排班工时，按已工作时间估算。午休不计薪，已过工作日按满勤计算。节假日、调休、请假、加班和税费未自动计入。修改排班会重新估算整月。设置仅保存在当前浏览器或桌面版，不会自动跨设备同步。</p></details></div>
+      </section>
+    </div>
+    <nav class="glass bottom-nav" aria-label="主导航"><span class="nav-indicator" aria-hidden="true"></span><button data-view="today" aria-current="page"></button><button data-view="month"></button><button data-view="settings"></button></nav>
+  </main>
+  <dialog id="floating-dialog" class="floating-dialog" aria-labelledby="floating-title">
+    <div class="floating-dialog-header"><h2 id="floating-title">小窗模式</h2><button class="icon-button" id="close-floating-dialog" aria-label="关闭小窗选项"></button></div>
+    <p id="floating-hint">切换应用、最小化浏览器时，小窗仍会显示。</p>
+    <button id="browser-float" class="save-button">开启置顶小窗</button>
+    <a class="desktop-download" href="https://github.com/GGBond2424648901/salary-glass-clock/releases/latest/download/SalaryClock-Windows-x64.zip" target="_blank" rel="noopener noreferrer">下载 Windows 桌面版 <span>↗</span></a>
+    <p class="floating-footnote">彻底关闭浏览器后继续显示，请使用独立桌面版。解压后运行 SalaryClock.exe。</p>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>
