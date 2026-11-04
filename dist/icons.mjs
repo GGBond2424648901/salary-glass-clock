@@ -1,4 +1,5 @@
 const paths={
+opacity:'<path d="M12 2.5S5.5 9 5.5 13.5a6.5 6.5 0 0 0 13 0C18.5 9 12 2.5 12 2.5Z"/><path d="M12 7v13"/>',
 float:'<rect x="3" y="4" width="18" height="16" rx="3"/><rect x="11" y="11" width="8" height="6.5" rx="1.5"/><path d="M6 8h5"/>',
 pin:'<path d="m9 3 8 0-1 7 3 3v1h-6l-1 7-1-7H5v-1l3-3 1-7Z"/>',
 expand:'<path d="M14 3h7v7M21 3l-8 8M10 21H3v-7M3 21l8-8"/>',

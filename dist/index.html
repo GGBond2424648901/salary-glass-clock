@@ -9,6 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="appearance.css">
 </head>
 <body>
   <div class="wallpaper" aria-hidden="true"></div>
@@ -67,6 +68,7 @@
           <div class="form-divider"></div>
           <fieldset class="field-group"><legend class="field-label">金额跳动</legend><div id="step-mode" class="segmented" role="group" aria-label="金额跳动幅度"></div></fieldset>
           <fieldset class="field-group unit-field"><legend class="field-label">显示单位</legend><div id="settings-unit" class="segmented" role="group" aria-label="设置显示单位"></div></fieldset>
+          <div class="glass-field"><label class="field-label glass-label-row" for="glass-transparency">玻璃透明度 <output id="glass-value">40%</output></label><input class="glass-range" type="range" id="glass-transparency" min="0" max="100" step="1" value="40" aria-label="玻璃透明度"><div class="glass-range-captions"><span>磨砂</span><span>通透</span></div></div>
           <p id="form-error" class="form-error" role="alert" hidden></p>
           <button type="submit" class="save-button" id="save-settings">保存设置<span class="button-shine" aria-hidden="true"></span></button>
         </form>

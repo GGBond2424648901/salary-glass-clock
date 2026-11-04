@@ -1,6 +1,6 @@
 export const DEFAULT_SETTINGS = Object.freeze({
   salary:5000, mode:'double', days:[1,2,3,4,5], start:'09:00', end:'18:00',
-  breakEnabled:true, breakStart:'12:00', breakEnd:'13:30', step:.01, unit:'yuan'
+  breakEnabled:true, breakStart:'12:00', breakEnd:'13:30', step:.01, unit:'yuan',glassTransparency:40
 });
 const MINUTE=60000;
 const timeMinutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
@@ -28,6 +28,7 @@ export function validateSettings(s){
   if(s.breakEnabled&&(bs<start||be>end||be<=bs||be-bs>=end-start))return '午休需在上班时段内，且短于总工时';
   if(![.01,.1,1].includes(s.step))return '请选择金额跳动幅度';
   if(!['yuan','mao','fen'].includes(s.unit))return '请选择显示单位';
+  if(!Number.isFinite(s.glassTransparency)||s.glassTransparency<0||s.glassTransparency>100)return '玻璃透明度应为 0–100%';
   return '';
 }
 export function workDaysInMonth(year,month,s){

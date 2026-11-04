@@ -1,17 +1,20 @@
 import {miniSnapshot} from './mini-state.mjs';
 import {getLocalStorage,createSettingsSession,SETTINGS_KEY} from './settings.mjs';
 import {icon} from './icons.mjs';
+import {applyGlassAppearance} from './appearance.mjs';
 export function mountMini(doc,options={}){
   const win=doc.defaultView,storage=getLocalStorage(win),session=createSettingsSession({storage,initialSettings:options.initialSettings||options.getSettings?.()});
-  let compact=false,pinned=true,disposed=false,lastAmount='',lastState='',compactChanging=false;
+  let compact=false,pinned=true,disposed=false,lastAmount='',lastState='',compactChanging=false,transparencyPreview=null;
+  const currentSettings=()=>{const value=options.getSettings?.()||session.get();return transparencyPreview===null?value:{...value,glassTransparency:transparencyPreview};};
   doc.body.classList.add('mini-body');
   doc.body.innerHTML=`<main class="mini-card" aria-label="攒钱钟置顶小窗">
     <header class="mini-header"><span class="mini-status"><i></i><span>上班中</span></span><div class="mini-actions">
+      <button class="mini-icon" data-action="appearance" title="玻璃透明度" aria-label="玻璃透明度" aria-expanded="false">${icon('opacity')}</button>
       <button class="mini-icon" data-action="compact" title="紧凑模式" aria-label="紧凑模式" aria-pressed="false">${icon('compact')}</button>
       <button class="mini-icon" data-action="pin" title="置顶" aria-label="置顶" aria-pressed="true" ${options.onPin?'':'hidden'}>${icon('pin')}</button>
       <button class="mini-icon" data-action="expand" title="返回主界面" aria-label="返回主界面">${icon('expand')}</button>
       <button class="mini-icon" data-action="close" title="关闭小窗" aria-label="关闭小窗">${icon('close')}</button>
-    </div></header>
+    </div></header><section class="mini-appearance" hidden><label for="mini-glass">玻璃透明度 <output>40%</output></label><input class="glass-range" id="mini-glass" type="range" min="0" max="100" step="1" value="40" aria-label="小窗玻璃透明度"></section>
     <div class="mini-content"><div class="mini-income-block"><span class="mini-label">今日已赚</span><button class="mini-income" data-action="unit" title="点击切换元、毛、分" aria-label="切换金额单位"><span class="mini-symbol">¥</span><span class="mini-amount">0.00</span></button></div>
     <div class="mini-time-block"><span class="mini-label mini-count-label">距离下班</span><span class="mini-countdown">00:00:00</span></div></div>
     <div class="mini-progress" role="progressbar" aria-label="今日工作进度" aria-valuemin="0" aria-valuemax="100"><span></span></div>
@@ -21,7 +24,8 @@ export function mountMini(doc,options={}){
   function setText(selector,value){const el=q(selector);if(el.textContent!==String(value))el.textContent=value;}
   function render(){
     if(disposed)return;
-    const state=miniSnapshot(options.getSettings?.()||session.get());
+    const settings=currentSettings(),state=miniSnapshot(settings);applyGlassAppearance(doc,settings.glassTransparency);
+    setText('.mini-appearance output',`${settings.glassTransparency}%`);q('#mini-glass').value=settings.glassTransparency;
     setText('.mini-status span',state.status);q('.mini-status').dataset.state=state.active?'active':state.pause?'pause':'rest';
     setText('.mini-symbol',state.symbol);setText('.mini-amount',state.amount);setText('.mini-count-label',state.label);setText('.mini-countdown',state.countdown);setText('.mini-hours',`${state.hours} / ${state.dailyHours} 小时`);
     q('.mini-income').classList.toggle('non-yuan',state.unit!=='yuan');q('.mini-income').classList.toggle('long',state.amount.length>8);
@@ -32,12 +36,17 @@ export function mountMini(doc,options={}){
     if(lastState!==state.status){doc.title=`${state.status} · 攒钱钟`;lastState=state.status;}
     lastAmount=state.amount;
   }
-  function setUnit(unit){const next={...(options.getSettings?.()||session.get()),unit},saved=session.set(next);options.onSettingsChange?.(next,saved);if(!saved){setText('.mini-notice','设置仅本次生效');q('.mini-notice').hidden=false;win.setTimeout(()=>{q('.mini-notice').hidden=true;},2500);}render();}
+  function storageNotice(saved){if(!saved){setText('.mini-notice','设置仅本次生效');q('.mini-notice').hidden=false;win.setTimeout(()=>{q('.mini-notice').hidden=true;},2500);}}
+  function setUnit(unit){const next={...currentSettings(),unit},saved=session.set(next);transparencyPreview=null;options.onSettingsChange?.(next,saved);storageNotice(saved);render();}
+  q('#mini-glass').addEventListener('input',event=>{transparencyPreview=Number(event.target.value);const next=currentSettings();session.preview(next);options.onAppearancePreview?.(next);render();});
+  q('#mini-glass').addEventListener('change',()=>{const next=currentSettings(),saved=session.set(next);transparencyPreview=null;options.onSettingsChange?.(next,saved);storageNotice(saved);render();});
   doc.body.addEventListener('click',async event=>{
+    if(!event.target.closest('.mini-appearance')&&!event.target.closest('[data-action="appearance"]')){q('.mini-appearance').hidden=true;q('[data-action="appearance"]').setAttribute('aria-expanded','false');}
     const button=event.target.closest('button');if(!button)return;
     try{
+      if(button.dataset.action==='appearance'){const popup=q('.mini-appearance');popup.hidden=!popup.hidden;button.setAttribute('aria-expanded',String(!popup.hidden));return;}
       if(button.dataset.unit){setUnit(button.dataset.unit);return;}
-      if(button.dataset.action==='unit'){const values=['yuan','mao','fen'],current=(options.getSettings?.()||session.get()).unit;setUnit(values[(values.indexOf(current)+1)%3]);}
+      if(button.dataset.action==='unit'){const values=['yuan','mao','fen'],current=currentSettings().unit;setUnit(values[(values.indexOf(current)+1)%3]);}
       if(button.dataset.action==='close')options.onClose?.();
       if(button.dataset.action==='expand')options.onExpand?.();
       if(button.dataset.action==='compact'){

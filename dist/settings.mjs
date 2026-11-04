@@ -11,5 +11,5 @@ export function saveSettings(settings,storage){
 }
 export function createSettingsSession({storage,initialSettings}={}){
   let current=initialSettings&&!validateSettings(initialSettings)?{...initialSettings,days:[...initialSettings.days]}:loadSettings(storage);
-  return {get:()=>current,set(next){if(validateSettings(next))return false;current={...next,days:[...next.days]};return saveSettings(current,storage);},reload(){current=loadSettings(storage);}};
+  return {get:()=>current,preview(next){if(validateSettings(next))return false;current={...next,days:[...next.days]};return true;},set(next){if(validateSettings(next))return false;current={...next,days:[...next.days]};return saveSettings(current,storage);},reload(){current=loadSettings(storage);}};
 }

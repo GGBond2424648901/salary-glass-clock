@@ -1,0 +1,24 @@
+:root{--glass-outerTop:.69;--glass-outerMid:.54;--glass-outerEnd:.59;--glass-surfaceTop:.54;--glass-surfaceMid:.35;--glass-surfaceEnd:.49;--glass-control:.52;--glass-input:.42;--glass-track:.052;--glass-border:.64;--glass-highlight:.41;--glass-blur:19px;--glass-miniSurface:.73;--glass-miniArt:.6}
+.app-shell{background:linear-gradient(135deg,rgba(255,255,255,var(--glass-outerTop)),rgba(255,255,255,var(--glass-outerMid)) 50%,rgba(255,255,255,var(--glass-outerEnd)));border-color:rgba(255,255,255,var(--glass-border));backdrop-filter:blur(var(--glass-blur)) saturate(1.15);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.15);box-shadow:inset 0 1px 1px rgba(255,255,255,var(--glass-highlight)),0 20px 65px rgba(58,41,56,.12)}
+.glass{background:linear-gradient(135deg,rgba(255,255,255,var(--glass-surfaceTop)),rgba(255,255,255,var(--glass-surfaceMid)) 52%,rgba(255,255,255,var(--glass-surfaceEnd)));border-color:rgba(255,255,255,var(--glass-border));box-shadow:inset 0 1px 1px rgba(255,255,255,var(--glass-highlight)),0 5px 11px rgba(67,43,61,.035)}
+.segment-thumb,.nav-indicator,.app-icon,.icon-button{background:linear-gradient(145deg,rgba(255,255,255,var(--glass-control)),rgba(255,255,255,var(--glass-input)));border-color:rgba(255,255,255,var(--glass-border));box-shadow:inset 0 1px 2px rgba(255,255,255,var(--glass-highlight)),0 3px 8px rgba(67,43,61,.07)}
+.segmented{background:rgba(120,110,125,var(--glass-track));border-color:rgba(255,255,255,var(--glass-border))}
+.salary-input,input[type=time]{background:linear-gradient(130deg,rgba(255,255,255,var(--glass-control)),rgba(255,255,255,var(--glass-input)));border-color:rgba(255,255,255,var(--glass-border))}
+.calculation-note p{background:rgba(255,255,255,var(--glass-control))}
+.mini-card{background:linear-gradient(135deg,rgba(255,255,255,var(--glass-surfaceTop)),rgba(255,255,255,var(--glass-surfaceMid)));border-color:rgba(255,255,255,var(--glass-border));box-shadow:inset 0 1px 2px rgba(255,255,255,var(--glass-highlight)),0 8px 28px rgba(53,37,56,.09)}
+.mini-card:before{opacity:var(--glass-miniArt)}.mini-card:after{background:rgba(255,250,252,var(--glass-miniSurface));backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur))}
+.mini-units button[aria-pressed=true],.mini-icon[aria-pressed=true]{background:rgba(255,255,255,var(--glass-control))}
+html[data-glass-clear=true] .app-shell,html[data-glass-clear=true] .mini-card{text-shadow:0 1px 2px rgba(255,255,255,.95),0 0 7px rgba(255,255,255,.5)}
+html[data-glass-clear=true] .app-shell svg,html[data-glass-clear=true] .mini-card svg{filter:drop-shadow(0 1px 1px rgba(255,255,255,.7))}
+html[data-glass-clear=true] .clock-panel .eyebrow,html[data-glass-clear=true] .date-line{color:#4d424d}
+html[data-glass-clear=true] .month-preview,html[data-glass-clear=true] .metric-strip,html[data-glass-clear=true] .bottom-nav button{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+html[data-glass-clear=true] .month-preview .muted,html[data-glass-clear=true] .metric-strip .muted{color:rgba(255,255,255,.85)}
+html[data-glass-clear=true] .bottom-nav svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.7))}
+.glass-label-row{display:flex;justify-content:space-between;align-items:center}.glass-label-row output{font-size:12px;color:#9e718a;font-variant-numeric:tabular-nums}
+.glass-range{display:block;width:100%;height:24px;margin:0;accent-color:#d68da9;cursor:pointer;background:transparent}
+.glass-range-captions{display:flex;justify-content:space-between;font-size:10px;color:#8a7b89;line-height:15px;margin-top:2px}
+.glass-field{margin-top:-3px;margin-bottom:14px}
+.mini-appearance{position:absolute;left:11px;right:11px;top:44px;z-index:5;padding:8px 10px;border:1px solid #fff;border-radius:13px;background:rgba(255,250,253,.94);box-shadow:0 5px 20px #5a3c581c;backdrop-filter:blur(16px);color:#655063;text-shadow:none}
+.mini-appearance label{display:flex;align-items:center;justify-content:space-between;font-size:10px;line-height:15px}.mini-appearance input{height:20px}.mini-appearance output{color:#ad6b8c;font-variant-numeric:tabular-nums}
+body[data-compact=true] .mini-appearance{top:32px;padding:5px 9px;border-radius:11px}
+@media(max-height:650px){.glass-field{margin-bottom:10px}.glass-range{height:20px}.glass-range-captions{font-size:9px;line-height:12px}}

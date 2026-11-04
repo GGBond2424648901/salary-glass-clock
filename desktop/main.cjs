@@ -21,7 +21,7 @@ function createMain(){
 }
 function createMini(){
   const area=screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
-  const window=guardWindow(new BrowserWindow({width:340,height:252,minWidth:220,minHeight:180,maxWidth:720,maxHeight:560,x:area.x+area.width-364,y:area.y+36,title:'攒钱钟 · 置顶小窗',frame:false,transparent:true,alwaysOnTop:true,skipTaskbar:true,resizable:true,hasShadow:true,roundedCorners:true,webPreferences:preferences(false)}));
+  const window=guardWindow(new BrowserWindow({width:340,height:252,minWidth:220,minHeight:180,maxWidth:720,maxHeight:560,x:area.x+area.width-364,y:area.y+36,title:'攒钱钟 · 置顶小窗',frame:false,transparent:true,backgroundColor:'#00000000',alwaysOnTop:true,skipTaskbar:true,resizable:true,hasShadow:true,roundedCorners:true,webPreferences:preferences(false)}));
   window.loadURL(ORIGIN+'/mini.html');return window;
 }
 function assertSender(event,file){

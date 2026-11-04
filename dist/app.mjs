@@ -4,6 +4,7 @@ import {loadSettings,saveSettings,SETTINGS_KEY as KEY} from './settings.mjs';
 import {mountMini} from './mini-ui.mjs';
 import {installAdaptiveLayout} from './adaptive-layout.mjs';
 import {swapViews,setDisclosure,swapRegion} from './motion.mjs';
+import {applyGlassAppearance} from './appearance.mjs';
 const $=id=>document.getElementById(id);
 const units=[['yuan','元'],['mao','毛'],['fen','分']];
 const money=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -13,6 +14,10 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let settings=loadSettings(),draft={...settings,days:[...settings.days]},currentView='today',lastView='today';
 let selectedMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),selectedDay=null,lastDate='',lastMonthPaint='',toastTimer;
 function setText(id,text){const el=$(id);if(el.textContent!==String(text))el.textContent=text;}
+function syncGlassControls(){const value=settings.glassTransparency;$('glass-transparency').value=value;setText('glass-value',`${value}%`);draft.glassTransparency=value;applyGlassAppearance(document,value);}
+function setGlassTransparency(value,persistValue=false){settings={...settings,glassTransparency:Math.max(0,Math.min(100,Number(value)))};syncGlassControls();if(persistValue)persist();}
+$('glass-transparency').addEventListener('input',event=>setGlassTransparency(event.target.value));
+$('glass-transparency').addEventListener('change',event=>setGlassTransparency(event.target.value,true));
 function segment(id,options,value,onChange){
   const root=$(id);root.style.setProperty('--count',options.length);
   root.innerHTML='<span class="segment-thumb" aria-hidden="true"></span>'+options.map(([v,label])=>`<button type="button" data-value="${v}" aria-pressed="${String(value)===String(v)}">${label}</button>`).join('');
@@ -55,13 +60,14 @@ $('browser-float').addEventListener('click',async()=>{
   try{
     pipWindow=await window.documentPictureInPicture.requestWindow({width:340,height:252});
     const doc=pipWindow.document;doc.documentElement.lang='zh-CN';
-    const stylesheet=doc.createElement('link');stylesheet.rel='stylesheet';stylesheet.href=new URL('./mini.css',import.meta.url).href;doc.head.append(stylesheet);
+    for(const name of ['mini.css','appearance.css']){const stylesheet=doc.createElement('link');stylesheet.rel='stylesheet';stylesheet.href=new URL(`./${name}`,import.meta.url).href;doc.head.append(stylesheet);}
     const mini=mountMini(doc,{
       onClose:()=>pipWindow?.close(),
       onExpand:()=>{pipWindow?.close();window.focus();},
       onCompact:compact=>pipWindow?.resizeTo(compact?320:340,compact?140:290),
       getSettings:()=>settings,
-      onSettingsChange:(next,saved)=>{settings=next;updateSegment('home-unit',settings.unit);paintClock();if(!saved)toast('设置仅本次生效');}
+      onAppearancePreview:next=>{settings={...settings,glassTransparency:next.glassTransparency};syncGlassControls();},
+      onSettingsChange:(next,saved)=>{settings=next;syncGlassControls();updateSegment('home-unit',settings.unit);paintClock();if(!saved)toast('设置仅本次生效');}
     });
     pipWindow.addEventListener('pagehide',()=>{mini.dispose();pipWindow=null;},{once:true});
     toast('小窗已开启，可将浏览器最小化');
@@ -105,6 +111,7 @@ function paintMonthChart(data){
 }
 function paintClock(){
   const now=new Date(),m=metrics(settings,now),parts=amountParts(m.earned,settings.unit,settings.step);
+  applyGlassAppearance(document,settings.glassTransparency);
   const currentDate=now.toDateString();
   if(currentDate!==lastDate){setText('date-line',`${now.getMonth()+1}月${now.getDate()}日，星期${weekdays[now.getDay()]}`);lastDate=currentDate;}
   setText('work-status',m.status);$('status-dot').className=`status-dot ${m.active?'active':m.status==='午休中'?'pause':'rest'}`;
@@ -158,6 +165,7 @@ function setBreakUI(){
 }
 function populateForm(){
   draft={...settings,days:[...settings.days]};Object.entries(fields).forEach(([key,id])=>{$(id).value=draft[key];});
+  syncGlassControls();
   updateSegment('work-mode',draft.mode);updateSegment('step-mode',draft.step);updateSegment('settings-unit',draft.unit);
   $('custom-days').hidden=draft.mode!=='custom';
   $('custom-days').innerHTML=[1,2,3,4,5,6,0].map(day=>`<button type="button" data-weekday="${day}" aria-label="星期${weekdays[day]}" aria-pressed="${draft.days.includes(day)}">${weekdays[day]}</button>`).join('');
@@ -174,8 +182,8 @@ $('settings-form').addEventListener('submit',event=>{
   if(error){setText('form-error',error);$('form-error').hidden=false;return;}
   settings={...draft,days:[...draft.days]};const saved=persist();lastMonthPaint='';updateSegment('home-unit',settings.unit);navigate('today');paintClock();if(saved)toast('设置已保存');
 });
-window.addEventListener('storage',event=>{if(event.key===KEY){settings=loadSettings();updateSegment('home-unit',settings.unit);lastMonthPaint='';if(currentView==='today')paintClock();if(currentView==='month')paintMonth();}});
-window.desktopClock?.onSettingsChanged?.(({settings:next,persisted})=>{if(validateSettings(next))return;settings=next;updateSegment('home-unit',settings.unit);lastMonthPaint='';if(currentView==='today')paintClock();if(currentView==='month')paintMonth();if(!persisted)toast('设置仅本次生效');});
+window.addEventListener('storage',event=>{if(event.key===KEY){settings=loadSettings();syncGlassControls();updateSegment('home-unit',settings.unit);lastMonthPaint='';if(currentView==='today')paintClock();if(currentView==='month')paintMonth();}});
+window.desktopClock?.onSettingsChanged?.(({settings:next,persisted})=>{if(validateSettings(next))return;settings=next;syncGlassControls();updateSegment('home-unit',settings.unit);lastMonthPaint='';if(currentView==='today')paintClock();if(currentView==='month')paintMonth();if(!persisted)toast('设置仅本次生效');});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){paintClock();if(currentView==='month')paintMonth();}});
 document.querySelector('.app-shell').dataset.view='today';paintClock();
 let noteMoving=false;
