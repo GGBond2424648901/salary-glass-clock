@@ -3,7 +3,7 @@ import {getLocalStorage,createSettingsSession,SETTINGS_KEY} from './settings.mjs
 import {icon} from './icons.mjs';
 export function mountMini(doc,options={}){
   const win=doc.defaultView,storage=getLocalStorage(win),session=createSettingsSession({storage,initialSettings:options.initialSettings||options.getSettings?.()});
-  let compact=false,pinned=true,disposed=false,lastAmount='',lastState='';
+  let compact=false,pinned=true,disposed=false,lastAmount='',lastState='',compactChanging=false;
   doc.body.classList.add('mini-body');
   doc.body.innerHTML=`<main class="mini-card" aria-label="攒钱钟置顶小窗">
     <header class="mini-header"><span class="mini-status"><i></i><span>上班中</span></span><div class="mini-actions">
@@ -41,7 +41,12 @@ export function mountMini(doc,options={}){
       if(button.dataset.action==='close')options.onClose?.();
       if(button.dataset.action==='expand')options.onExpand?.();
       if(button.dataset.action==='compact'){
-        const next=!compact;await options.onCompact?.(next);compact=next;doc.body.dataset.compact=String(compact);button.setAttribute('aria-pressed',String(compact));button.setAttribute('aria-label',compact?'展开小窗':'紧凑模式');button.title=compact?'展开小窗':'紧凑模式';
+        if(compactChanging)return;compactChanging=true;let fade;
+        try{const next=!compact,motion=!win.matchMedia('(prefers-reduced-motion:reduce)').matches;
+          if(motion){fade=q('.mini-content').animate([{opacity:1},{opacity:0}],{duration:90,easing:'ease-out',fill:'both'});try{await fade.finished;}catch{}}
+          await options.onCompact?.(next);compact=next;doc.body.dataset.compact=String(compact);button.setAttribute('aria-pressed',String(compact));button.setAttribute('aria-label',compact?'展开小窗':'紧凑模式');button.title=compact?'展开小窗':'紧凑模式';
+          fade?.cancel();if(motion)q('.mini-content').animate([{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'translateY(0)'}],{duration:220,easing:'cubic-bezier(.2,.8,.2,1)'});
+        }finally{fade?.cancel();compactChanging=false;}
       }
       if(button.dataset.action==='pin'){const next=await options.onPin?.(!pinned);setPinned(typeof next==='boolean'?next:!pinned);}
     }catch{doc.title='小窗操作未完成 · 攒钱钟';}

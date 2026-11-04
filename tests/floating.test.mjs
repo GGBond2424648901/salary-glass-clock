@@ -61,3 +61,8 @@ test('compact mode expands without temporarily violating native window size cons
   applyCompactSize(window,true);assert.equal(window.size,110);
   applyCompactSize(window,false);assert.equal(window.size,252);
 });
+test('compact mode returns to custom expanded size even after repeated compact requests',()=>{
+  const window={size:[500,320],getSize(){return this.size;},setMinimumSize(){},setMaximumSize(){},setSize(w,h){this.size=[w,h];}};
+  applyCompactSize(window,true);applyCompactSize(window,true);applyCompactSize(window,false);
+  assert.deepEqual(window.size,[500,320]);
+});

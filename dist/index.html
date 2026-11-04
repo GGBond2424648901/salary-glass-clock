@@ -12,12 +12,12 @@
 </head>
 <body>
   <div class="wallpaper" aria-hidden="true"></div>
-  <main class="app-shell" aria-label="上班攒钱钟">
-    <header class="app-header">
+  <div class="app-stage"><main class="app-shell" aria-label="上班攒钱钟">
+    <div class="app-chrome"><header class="app-header">
       <div class="heading"><span class="app-icon" id="header-icon" aria-hidden="true"></span><h1 id="page-title">上班攒钱钟</h1></div>
       <div class="header-actions"><button class="icon-button" id="floating-button" aria-label="小窗模式" title="小窗模式"></button><button class="icon-button" id="header-action" aria-label="打开设置" title="设置"></button></div>
     </header>
-    <p class="date-line" id="date-line"></p>
+    <p class="date-line" id="date-line"></p></div>
     <div class="view-host">
       <section id="today-view" class="view" aria-label="今天">
         <div class="glass clock-panel">
@@ -74,7 +74,7 @@
       </section>
     </div>
     <nav class="glass bottom-nav" aria-label="主导航"><span class="nav-indicator" aria-hidden="true"></span><button data-view="today" aria-current="page"></button><button data-view="month"></button><button data-view="settings"></button></nav>
-  </main>
+  </main></div>
   <dialog id="floating-dialog" class="floating-dialog" aria-labelledby="floating-title">
     <div class="floating-dialog-header"><h2 id="floating-title">小窗模式</h2><button class="icon-button" id="close-floating-dialog" aria-label="关闭小窗选项"></button></div>
     <p id="floating-hint">切换应用、最小化浏览器时，小窗仍会显示。</p>

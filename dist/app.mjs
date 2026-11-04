@@ -2,6 +2,8 @@ import {validateSettings, shiftMinutes, workDaysInMonth, metrics, amountParts, m
 import {icon} from './icons.mjs';
 import {loadSettings,saveSettings,SETTINGS_KEY as KEY} from './settings.mjs';
 import {mountMini} from './mini-ui.mjs';
+import {installAdaptiveLayout} from './adaptive-layout.mjs';
+import {swapViews,setDisclosure,swapRegion} from './motion.mjs';
 const $=id=>document.getElementById(id);
 const units=[['yuan','元'],['mao','毛'],['fen','分']];
 const money=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -23,7 +25,7 @@ function persist(){if(saveSettings(settings))return true;toast('浏览器未允�
 function changeUnit(unit){settings={...settings,unit};persist();updateSegment('home-unit',unit);paintClock();}
 function setDraft(key,value){draft[key]=value;updateFormPreview();}
 segment('home-unit',units,settings.unit,changeUnit);
-segment('work-mode',[['double','双休'],['single','单休'],['custom','自定义']],draft.mode,value=>{draft.mode=value;updateSegment('work-mode',value);$('custom-days').hidden=value!=='custom';updateFormPreview();});
+segment('work-mode',[['double','双休'],['single','单休'],['custom','自定义']],draft.mode,value=>{draft.mode=value;updateSegment('work-mode',value);setDisclosure($('custom-days'),value==='custom',!reduceMotion.matches);updateFormPreview();});
 segment('step-mode',[[.01,'每1分'],[.1,'每1毛'],[1,'每1元']],draft.step,value=>{draft.step=Number(value);updateSegment('step-mode',value);});
 segment('settings-unit',units,draft.unit,value=>{draft.unit=value;updateSegment('settings-unit',value);});
 const navButtons=[...document.querySelectorAll('[data-view]')];
@@ -43,10 +45,13 @@ function openFloatingDialog(){
 $('floating-button').addEventListener('click',openFloatingDialog);
 $('floating-help').addEventListener('click',openFloatingDialog);
 $('close-floating-dialog').innerHTML=icon('close');
-$('close-floating-dialog').addEventListener('click',()=>$('floating-dialog').close());
-$('floating-dialog').addEventListener('click',event=>{if(event.target===$('floating-dialog'))$('floating-dialog').close();});
+let closingDialog=false;
+async function closeFloatingDialog(){if(closingDialog||!$('floating-dialog').open)return;closingDialog=true;if(!reduceMotion.matches){const effect=$('floating-dialog').animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'translateY(6px) scale(.98)'}],{duration:160,easing:'ease-in'});try{await effect.finished;}catch{}}$('floating-dialog').close();closingDialog=false;}
+$('close-floating-dialog').addEventListener('click',closeFloatingDialog);
+$('floating-dialog').addEventListener('click',event=>{if(event.target===$('floating-dialog'))closeFloatingDialog();});
+$('floating-dialog').addEventListener('cancel',event=>{event.preventDefault();closeFloatingDialog();});
 $('browser-float').addEventListener('click',async()=>{
-  $('floating-dialog').close();
+  closeFloatingDialog();
   try{
     pipWindow=await window.documentPictureInPicture.requestWindow({width:340,height:252});
     const doc=pipWindow.document;doc.documentElement.lang='zh-CN';
@@ -65,18 +70,20 @@ $('browser-float').addEventListener('click',async()=>{
 $('prev-month').innerHTML=icon('left');$('next-month').innerHTML=icon('right');
 $('month-preview').addEventListener('click',()=>{selectedMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);selectedDay=null;navigate('month');});
 $('header-action').addEventListener('click',()=>navigate(currentView==='settings'?lastView:'settings'));
-function navigate(view){
-  if(view===currentView)return;
-  if(view!=='settings')lastView=view;else lastView=currentView;
-  currentView=view;document.querySelector('.app-shell').dataset.view=view;
-  document.querySelectorAll('.view').forEach(el=>{el.hidden=el.id!==`${view}-view`;});
-  navButtons.forEach((button,i)=>{if(button.dataset.view===view){button.setAttribute('aria-current','page');document.querySelector('.bottom-nav').style.setProperty('--index',i);}else button.removeAttribute('aria-current');});
-  const heading=view==='today'?'上班攒钱钟':view==='month'?'本月收入':'工资与排班';setText('page-title',heading);
-  $('header-icon').innerHTML=icon(view==='month'?'calendar':'clock');
-  $('header-action').innerHTML=icon(view==='settings'?'close':'settings');$('header-action').setAttribute('aria-label',view==='settings'?'关闭设置':'打开设置');
-  if(view==='settings')populateForm();else if(view==='month')paintMonth();else paintClock();
-  window.scrollTo({top:0,behavior:'instant'});
-  if(!reduceMotion.matches)$(`${view}-view`).animate([{opacity:0,transform:'translateY(9px)',filter:'blur(2px)'},{opacity:1,transform:'translateY(0)',filter:'blur(0)'}],{duration:300,easing:'cubic-bezier(.2,.85,.25,1)'});
+let navigating=false,queuedView=null;
+async function navigate(view){
+  if(navigating){queuedView=view;return;}if(view===currentView)return;
+  navigating=true;const previous=currentView,order=['today','month','settings'];
+  if(view!=='settings')lastView=view;else lastView=currentView;currentView=view;
+  await swapViews(document.querySelector('.view-host'),document.querySelector('.app-chrome'),$(`${previous}-view`),$(`${view}-view`),()=>{
+    document.querySelector('.app-shell').dataset.view=view;
+    navButtons.forEach((button,i)=>{if(button.dataset.view===view){button.setAttribute('aria-current','page');document.querySelector('.bottom-nav').style.setProperty('--index',i);}else button.removeAttribute('aria-current');});
+    setText('page-title',view==='today'?'上班攒钱钟':view==='month'?'本月收入':'工资与排班');
+    $('header-icon').innerHTML=icon(view==='month'?'calendar':'clock');
+    $('header-action').innerHTML=icon(view==='settings'?'close':'settings');$('header-action').setAttribute('aria-label',view==='settings'?'关闭设置':'打开设置');
+    if(view==='settings')populateForm();else if(view==='month')paintMonth();else paintClock();
+  },{enabled:!reduceMotion.matches,direction:order.indexOf(view)>order.indexOf(previous)?1:-1});
+  navigating=false;const pending=queuedView;queuedView=null;if(pending&&pending!==currentView)navigate(pending);
 }
 function pathFor(points,width,height,domain,maxValue){
   const pad=5, max=maxValue||Math.max(1,...points.map(p=>p.value)),end=domain||Math.max(1,points.at(-1)?.day||1);
@@ -140,7 +147,8 @@ function refreshCalendar(data){
   setText('calendar-selection',chosen?`${month+1}月${chosen.day}日 · ${chosen.working?chosen.future?'工作日 · 尚未开始':`已赚 ¥${money(chosen.earned)}`:'休息日'}`:'');
 }
 $('calendar-grid').addEventListener('click',event=>{const button=event.target.closest('[data-day]');if(!button)return;selectedDay=Number(button.dataset.day);refreshCalendar(monthData(settings,selectedMonth.getFullYear(),selectedMonth.getMonth(),new Date()));toast($('calendar-selection').textContent);});
-function moveMonth(delta){selectedMonth=new Date(selectedMonth.getFullYear(),selectedMonth.getMonth()+delta,1);selectedDay=null;paintMonth();}
+let monthMoving=false,pendingMonthDelta=0;
+async function moveMonth(delta){pendingMonthDelta+=delta;if(monthMoving)return;monthMoving=true;while(pendingMonthDelta){const step=pendingMonthDelta;pendingMonthDelta=0;const update=()=>{selectedMonth=new Date(selectedMonth.getFullYear(),selectedMonth.getMonth()+step,1);selectedDay=null;paintMonth();};if(currentView!=='month')update();else await swapRegion($('month-view'),update,{enabled:!reduceMotion.matches,direction:Math.sign(step)});}monthMoving=false;}
 $('prev-month').addEventListener('click',()=>moveMonth(-1));$('next-month').addEventListener('click',()=>moveMonth(1));
 const fields={salary:'salary',start:'start-time',end:'end-time',breakStart:'break-start',breakEnd:'break-end'};
 Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>setDraft(key,key==='salary'?Number($(id).value):$(id).value)));
@@ -170,5 +178,9 @@ window.addEventListener('storage',event=>{if(event.key===KEY){settings=loadSetti
 window.desktopClock?.onSettingsChanged?.(({settings:next,persisted})=>{if(validateSettings(next))return;settings=next;updateSegment('home-unit',settings.unit);lastMonthPaint='';if(currentView==='today')paintClock();if(currentView==='month')paintMonth();if(!persisted)toast('设置仅本次生效');});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){paintClock();if(currentView==='month')paintMonth();}});
 document.querySelector('.app-shell').dataset.view='today';paintClock();
+let noteMoving=false;
+document.querySelector('.calculation-note summary').addEventListener('click',async event=>{event.preventDefault();if(noteMoving)return;noteMoving=true;const note=document.querySelector('.calculation-note');await swapRegion(document.querySelector('.settings-links'),()=>{note.open=!note.open;},{enabled:!reduceMotion.matches});noteMoving=false;});
+const adaptiveLayout=installAdaptiveLayout(document.querySelector('.app-shell'),document.querySelector('.app-stage'));
+window.addEventListener('pagehide',event=>{if(!event.persisted)adaptiveLayout.dispose();});
 let lastMonthSecond=-1;
 setInterval(()=>{if(document.hidden)return;if(currentView==='today')paintClock();else if(currentView==='month'){const second=Math.floor(Date.now()/1000);if(second!==lastMonthSecond){const data=monthData(settings,selectedMonth.getFullYear(),selectedMonth.getMonth(),new Date());setText('selected-month-total',money(data.total));paintMonthChart(data);refreshCalendar(data);lastMonthSecond=second;}}},250);

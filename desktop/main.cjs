@@ -16,12 +16,12 @@ function guardWindow(window){
 function preferences(backgroundThrottling=true){return {preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling};}
 function createMain(){
   const area=screen.getPrimaryDisplay().workAreaSize;
-  const window=guardWindow(new BrowserWindow({width:Math.min(700,area.width),height:Math.min(940,area.height-30),minWidth:380,minHeight:620,title:'上班攒钱钟',backgroundColor:'#f5e6e8',autoHideMenuBar:true,icon:path.join(ROOT,'assets','icon.png'),webPreferences:preferences()}));
+  const window=guardWindow(new BrowserWindow({width:Math.min(460,area.width),height:Math.min(800,area.height-24),minWidth:300,minHeight:420,title:'上班攒钱钟',backgroundColor:'#f5e6e8',autoHideMenuBar:true,icon:path.join(ROOT,'assets','icon.png'),webPreferences:preferences()}));
   window.loadURL(ORIGIN+'/index.html');return window;
 }
 function createMini(){
   const area=screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
-  const window=guardWindow(new BrowserWindow({width:340,height:252,minWidth:280,minHeight:220,maxWidth:580,maxHeight:440,x:area.x+area.width-364,y:area.y+36,title:'攒钱钟 · 置顶小窗',frame:false,transparent:true,alwaysOnTop:true,skipTaskbar:true,resizable:true,hasShadow:true,roundedCorners:true,webPreferences:preferences(false)}));
+  const window=guardWindow(new BrowserWindow({width:340,height:252,minWidth:220,minHeight:180,maxWidth:720,maxHeight:560,x:area.x+area.width-364,y:area.y+36,title:'攒钱钟 · 置顶小窗',frame:false,transparent:true,alwaysOnTop:true,skipTaskbar:true,resizable:true,hasShadow:true,roundedCorners:true,webPreferences:preferences(false)}));
   window.loadURL(ORIGIN+'/mini.html');return window;
 }
 function assertSender(event,file){
