@@ -14,7 +14,7 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let settings=loadSettings(),draft={...settings,days:[...settings.days]},currentView='today',lastView='today';
 let selectedMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),selectedDay=null,lastDate='',lastMonthPaint='',toastTimer;
 function setText(id,text){const el=$(id);if(el.textContent!==String(text))el.textContent=text;}
-function syncGlassControls(){const value=settings.glassTransparency;$('glass-transparency').value=value;setText('glass-value',`${value}%`);draft.glassTransparency=value;applyGlassAppearance(document,value);}
+function syncGlassControls(){const value=settings.glassTransparency;$('glass-transparency').value=value;setText('glass-value',`${value}%`);draft.glassTransparency=value;draft.miniFontSize=settings.miniFontSize;applyGlassAppearance(document,value);}
 function setGlassTransparency(value,persistValue=false){settings={...settings,glassTransparency:Math.max(0,Math.min(100,Number(value)))};syncGlassControls();if(persistValue)persist();}
 $('glass-transparency').addEventListener('input',event=>setGlassTransparency(event.target.value));
 $('glass-transparency').addEventListener('change',event=>setGlassTransparency(event.target.value,true));
@@ -66,7 +66,7 @@ $('browser-float').addEventListener('click',async()=>{
       onExpand:()=>{pipWindow?.close();window.focus();},
       onCompact:compact=>pipWindow?.resizeTo(compact?320:340,compact?140:290),
       getSettings:()=>settings,
-      onAppearancePreview:next=>{settings={...settings,glassTransparency:next.glassTransparency};syncGlassControls();},
+      onAppearancePreview:next=>{settings={...settings,glassTransparency:next.glassTransparency,miniFontSize:next.miniFontSize};syncGlassControls();},
       onSettingsChange:(next,saved)=>{settings=next;syncGlassControls();updateSegment('home-unit',settings.unit);paintClock();if(!saved)toast('设置仅本次生效');}
     });
     pipWindow.addEventListener('pagehide',()=>{mini.dispose();pipWindow=null;},{once:true});
