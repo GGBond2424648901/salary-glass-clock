@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('desktopClock',Object.freeze({
   restoreMain:()=>ipcRenderer.invoke('clock:restore-main'),
   closeMini:()=>ipcRenderer.invoke('clock:close-mini'),
   setPinned:pinned=>ipcRenderer.invoke('clock:set-pinned',pinned),
-  setCompact:compact=>ipcRenderer.invoke('clock:set-compact',compact)
+  setCompact:compact=>ipcRenderer.invoke('clock:set-compact',compact),
+  setEditorOpen:open=>ipcRenderer.invoke('clock:set-editor',open)
 }));

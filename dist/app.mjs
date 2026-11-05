@@ -37,7 +37,7 @@ const navButtons=[...document.querySelectorAll('[data-view]')];
 navButtons.forEach((button,i)=>{const item=[['clock','今天'],['calendar','本月'],['settings','设置']][i];button.innerHTML=icon(item[0])+`<span>${item[1]}</span>`;button.addEventListener('click',()=>navigate(button.dataset.view));});
 $('header-icon').innerHTML=icon('clock');$('header-action').innerHTML=icon('settings');
 $('floating-button').innerHTML=icon('float');
-let pipWindow=null;
+let pipWindow=null,pipEditorSize=null;
 function openFloatingDialog(){
   if(window.desktopClock){window.desktopClock.openMini(settings).catch(()=>toast('小窗未能开启，请重试'));return;}
   if(pipWindow&&!pipWindow.closed){pipWindow.focus();return;}
@@ -65,11 +65,12 @@ $('browser-float').addEventListener('click',async()=>{
       onClose:()=>pipWindow?.close(),
       onExpand:()=>{pipWindow?.close();window.focus();},
       onCompact:compact=>pipWindow?.resizeTo(compact?320:340,compact?140:290),
+      onTypographyChange:open=>{if(!pipWindow)return;if(open&&pipWindow.innerHeight<240&&!pipEditorSize){const previous=[pipWindow.outerWidth,pipWindow.outerHeight];pipWindow.resizeTo(pipWindow.outerWidth,pipWindow.outerHeight+240-pipWindow.innerHeight);pipEditorSize=previous;}else if(!open&&pipEditorSize){const previous=pipEditorSize;pipEditorSize=null;pipWindow.resizeTo(...previous);}},
       getSettings:()=>settings,
       onAppearancePreview:next=>{settings={...settings,glassTransparency:next.glassTransparency,miniFontSize:next.miniFontSize,miniFontWeight:next.miniFontWeight};syncGlassControls();},
       onSettingsChange:(next,saved)=>{settings=next;syncGlassControls();updateSegment('home-unit',settings.unit);paintClock();if(!saved)toast('设置仅本次生效');}
     });
-    pipWindow.addEventListener('pagehide',()=>{mini.dispose();pipWindow=null;},{once:true});
+    pipWindow.addEventListener('pagehide',()=>{mini.dispose();pipWindow=null;pipEditorSize=null;},{once:true});
     toast('小窗已开启，可将浏览器最小化');
   }catch{if(pipWindow&&!pipWindow.closed)pipWindow.close();pipWindow=null;toast('小窗未能开启，可改用独立桌面版');}
 });

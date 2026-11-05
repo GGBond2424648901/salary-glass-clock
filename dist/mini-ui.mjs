@@ -16,14 +16,14 @@ export function mountMini(doc,options={}){
       <button class="mini-icon" data-action="expand" title="返回主界面" aria-label="返回主界面">${icon('expand')}</button>
       <button class="mini-icon" data-action="close" title="关闭小窗" aria-label="关闭小窗">${icon('close')}</button>
     </div></header><section class="mini-appearance" data-panel="appearance" hidden><label for="mini-glass">玻璃透明度 <output id="mini-glass-value">40%</output></label><input class="glass-range" id="mini-glass" type="range" min="0" max="100" step="1" value="40" aria-label="小窗玻璃透明度"></section>
-    <section class="mini-appearance" data-panel="typography" hidden><div class="mini-typography-controls">
-      <div><label for="mini-font">字体大小 <output id="mini-font-value">100%</output></label><input class="glass-range" id="mini-font" type="range" min="80" max="160" step="5" value="100" aria-label="小窗字体大小"><div class="mini-font-presets" role="group" aria-label="字号预设"><button data-font-size="100">标准</button><button data-font-size="125">大</button><button data-font-size="150">特大</button></div></div>
-      <div><label for="mini-weight">字体粗细 <output id="mini-weight-value">550</output></label><input class="glass-range" id="mini-weight" type="range" min="300" max="800" step="50" value="550" aria-label="小窗字体粗细"><div class="mini-font-presets" role="group" aria-label="字重预设"><button data-font-weight="350">细</button><button data-font-weight="550">标准</button><button data-font-weight="700">粗</button></div></div>
-    </div></section>
     <div class="mini-content"><div class="mini-income-block"><span class="mini-label">今日已赚</span><button class="mini-income" data-action="unit" title="点击切换元、毛、分" aria-label="切换金额单位"><span class="mini-symbol">¥</span><span class="mini-amount">0.00</span></button></div>
     <div class="mini-time-block"><span class="mini-label mini-count-label">距离下班</span><span class="mini-countdown">00:00:00</span></div></div>
     <div class="mini-progress" role="progressbar" aria-label="今日工作进度" aria-valuemin="0" aria-valuemax="100"><span></span></div>
-    <footer class="mini-footer"><span class="mini-hours">0 / 7.5 小时</span><div class="mini-units" role="group" aria-label="小窗金额单位"><button data-unit="yuan">元</button><button data-unit="mao">毛</button><button data-unit="fen">分</button></div></footer><span class="mini-notice" role="status" hidden></span>
+    <footer class="mini-footer"><span class="mini-hours">0 / 7.5 小时</span><div class="mini-units" role="group" aria-label="小窗金额单位"><button data-unit="yuan">元</button><button data-unit="mao">毛</button><button data-unit="fen">分</button></div></footer>
+    <section class="mini-appearance" data-panel="typography" hidden><div class="mini-typography-controls">
+      <div><label for="mini-font">字体大小 <output id="mini-font-value">100%</output></label><input class="glass-range" id="mini-font" type="range" min="80" max="160" step="5" value="100" aria-label="小窗字体大小"><div class="mini-font-presets" role="group" aria-label="字号预设"><button data-font-size="100">标准</button><button data-font-size="125">大</button><button data-font-size="150">特大</button></div></div>
+      <div><label for="mini-weight">字体粗细 <output id="mini-weight-value">550</output></label><input class="glass-range" id="mini-weight" type="range" min="300" max="800" step="50" value="550" aria-label="小窗字体粗细"><div class="mini-font-presets" role="group" aria-label="字重预设"><button data-font-weight="350">细</button><button data-font-weight="550">标准</button><button data-font-weight="700">粗</button></div></div>
+    </div></section><span class="mini-notice" role="status" hidden></span>
   </main>`;
   const q=s=>doc.querySelector(s);
   function setText(selector,value){const el=q(selector);if(el.textContent!==String(value))el.textContent=value;}
@@ -57,11 +57,21 @@ export function mountMini(doc,options={}){
     q(selector).addEventListener('input',event=>{appearancePreview={...appearancePreview,[field]:Number(event.target.value)};const next=currentSettings();session.preview(next);options.onAppearancePreview?.(next);render();});
     q(selector).addEventListener('change',()=>commit(currentSettings()));
   }
+  async function setPanel(name,open){
+    const popup=q(`[data-panel="${name}"]`);if(popup.hidden===!open)return;
+    if(name==='typography'){
+      if(open)try{await options.onTypographyChange?.(true);}catch{}
+      if(disposed)return;doc.body.dataset.editing=open?'typography':'';
+    }
+    popup.hidden=!open;q(`[data-action="${name}"]`).setAttribute('aria-expanded',String(open));
+    if(open&&!win.matchMedia('(prefers-reduced-motion:reduce)').matches)popup.animate([{opacity:0,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
+    if(name==='typography'&&!open)try{await options.onTypographyChange?.(false);}catch{}
+  }
   doc.body.addEventListener('click',async event=>{
-    for(const popup of doc.querySelectorAll('.mini-appearance'))if(event.target.closest('.mini-appearance')!==popup&&event.target.closest('button')?.dataset.action!==popup.dataset.panel){popup.hidden=true;q(`[data-action="${popup.dataset.panel}"]`).setAttribute('aria-expanded','false');}
+    for(const popup of doc.querySelectorAll('.mini-appearance'))if(event.target.closest('.mini-appearance')!==popup&&event.target.closest('button')?.dataset.action!==popup.dataset.panel)await setPanel(popup.dataset.panel,false);
     const button=event.target.closest('button');if(!button)return;
     try{
-      if(['appearance','typography'].includes(button.dataset.action)){const popup=q(`[data-panel="${button.dataset.action}"]`);popup.hidden=!popup.hidden;button.setAttribute('aria-expanded',String(!popup.hidden));return;}
+      if(['appearance','typography'].includes(button.dataset.action)){await setPanel(button.dataset.action,q(`[data-panel="${button.dataset.action}"]`).hidden);return;}
       if(button.dataset.fontSize){commit({...currentSettings(),miniFontSize:Number(button.dataset.fontSize)});return;}
       if(button.dataset.fontWeight){commit({...currentSettings(),miniFontWeight:Number(button.dataset.fontWeight)});return;}
       if(button.dataset.unit){setUnit(button.dataset.unit);return;}

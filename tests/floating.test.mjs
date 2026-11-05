@@ -5,6 +5,7 @@ import {DEFAULT_SETTINGS} from '../dist/engine.mjs';
 import {loadSettings,saveSettings,SETTINGS_KEY,getLocalStorage,createSettingsSession} from '../dist/settings.mjs';
 import {miniSnapshot} from '../dist/mini-state.mjs';
 import {createWindowController,applyCompactSize} from '../desktop/window-controller.cjs';
+import windowSizing from '../desktop/window-controller.cjs';
 const fakeStorage=value=>({getItem:()=>value,setItem(key,next){this.saved=[key,next];}});
 test('corrupt or blocked storage recovers to valid settings without crashing',()=>{
   assert.equal(loadSettings(fakeStorage('{')).salary,5000);
@@ -65,4 +66,16 @@ test('compact mode returns to custom expanded size even after repeated compact r
   const window={size:[500,320],getSize(){return this.size;},setMinimumSize(){},setMaximumSize(){},setSize(w,h){this.size=[w,h];}};
   applyCompactSize(window,true);applyCompactSize(window,true);applyCompactSize(window,false);
   assert.deepEqual(window.size,[500,320]);
+});
+test('font editing temporarily expands a small window and restores its exact dimensions and limits',()=>{
+  const window={size:[280,110],min:[220,100],max:[720,200],getSize(){return this.size;},getMinimumSize(){return this.min;},getMaximumSize(){return this.max;},setMinimumSize(w,h){assert.ok(h<=this.max[1]);this.min=[w,h];},setMaximumSize(w,h){assert.ok(h>=this.min[1]);this.max=[w,h];},setSize(w,h){assert.ok(h>=this.min[1]&&h<=this.max[1]);this.size=[w,h];}};
+  windowSizing.applyEditorSize(window,true);assert.deepEqual(window.size,[280,240]);
+  windowSizing.applyEditorSize(window,true);
+  windowSizing.applyEditorSize(window,false);
+  assert.deepEqual(window.size,[280,110]);assert.deepEqual(window.min,[220,100]);assert.deepEqual(window.max,[720,200]);
+});
+test('font editing keeps a sufficiently large custom window at its chosen size',()=>{
+  const window={size:[500,320],getSize(){return this.size;},getMinimumSize:()=>[220,180],getMaximumSize:()=>[720,560],setMinimumSize(){},setMaximumSize(){},setSize(w,h){this.size=[w,h];}};
+  windowSizing.applyEditorSize(window,true);assert.deepEqual(window.size,[500,320]);
+  windowSizing.applyEditorSize(window,false);assert.deepEqual(window.size,[500,320]);
 });

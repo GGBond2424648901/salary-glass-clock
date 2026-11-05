@@ -6,6 +6,7 @@ const mini=mountMini(document,{
   onClose:()=>native?native.closeMini():window.close(),
   onExpand:()=>native?native.restoreMain():window.close(),
   onCompact:compact=>native?.setCompact(compact),
+  onTypographyChange:native?(open=>native.setEditorOpen(open)):undefined,
   onPin:native?(pinned=>native.setPinned(pinned)):undefined,
   onSettingsChange:native?((settings,persisted)=>native.updateSettings(settings,persisted)):undefined
 });

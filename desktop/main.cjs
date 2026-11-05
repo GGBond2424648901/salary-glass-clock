@@ -2,7 +2,7 @@
 const {app,BrowserWindow,ipcMain,protocol,net,screen,shell,Menu}=require('electron');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
-const {createWindowController,applyCompactSize}=require('./window-controller.cjs');
+const {createWindowController,applyCompactSize,applyEditorSize}=require('./window-controller.cjs');
 const ROOT=path.join(__dirname,'..','dist');
 const ORIGIN='salary-clock://app';
 protocol.registerSchemesAsPrivileged([{scheme:'salary-clock',privileges:{standard:true,secure:true,supportFetchAPI:true,corsEnabled:true}}]);
@@ -54,6 +54,7 @@ if(!app.requestSingleInstanceLock())app.quit();else{
     ipcMain.handle('clock:close-mini',event=>{assertSender(event,'/mini.html');controller.closeMini();return true;});
     ipcMain.handle('clock:set-pinned',(event,pinned)=>{assertSender(event,'/mini.html');if(typeof pinned!=='boolean')throw Error('Invalid pinned state');controller.getMini()?.setAlwaysOnTop(pinned);return pinned;});
     ipcMain.handle('clock:set-compact',(event,compact)=>{assertSender(event,'/mini.html');if(typeof compact!=='boolean')throw Error('Invalid compact state');const window=controller.getMini();if(window)applyCompactSize(window,compact);return compact;});
+    ipcMain.handle('clock:set-editor',(event,open)=>{assertSender(event,'/mini.html');if(typeof open!=='boolean')throw Error('Invalid editor state');const window=controller.getMini();if(window)applyEditorSize(window,open);return open;});
     controller.openMain();
     app.on('activate',()=>controller.restoreMain());
   });
