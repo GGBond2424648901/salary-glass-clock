@@ -1,6 +1,6 @@
 export const DEFAULT_SETTINGS = Object.freeze({
   salary:5000, mode:'double', days:[1,2,3,4,5], start:'09:00', end:'18:00',
-  breakEnabled:true, breakStart:'12:00', breakEnd:'13:30', step:.01, unit:'yuan',glassTransparency:40,miniFontSize:100
+  breakEnabled:true, breakStart:'12:00', breakEnd:'13:30', step:.01, unit:'yuan',glassTransparency:40,miniFontSize:100,miniFontWeight:550
 });
 const MINUTE=60000;
 const timeMinutes=t=>Number(t.split(':')[0])*60+Number(t.split(':')[1]);
@@ -30,6 +30,7 @@ export function validateSettings(s){
   if(!['yuan','mao','fen'].includes(s.unit))return '请选择显示单位';
   if(!Number.isFinite(s.glassTransparency)||s.glassTransparency<0||s.glassTransparency>100)return '玻璃透明度应为 0–100%';
   if(!Number.isFinite(s.miniFontSize)||s.miniFontSize<80||s.miniFontSize>160)return '小窗字体大小应为 80–160%';
+  if(!Number.isFinite(s.miniFontWeight)||s.miniFontWeight<300||s.miniFontWeight>800)return '小窗字体粗细应为 300–800';
   return '';
 }
 export function workDaysInMonth(year,month,s){

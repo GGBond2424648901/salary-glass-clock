@@ -9,14 +9,17 @@ export function mountMini(doc,options={}){
   doc.body.classList.add('mini-body');
   doc.body.innerHTML=`<main class="mini-card" aria-label="攒钱钟置顶小窗">
     <header class="mini-header"><span class="mini-status"><i></i><span>上班中</span></span><div class="mini-actions">
-      <button class="mini-icon mini-type-button" data-action="typography" title="字体大小" aria-label="字体大小" aria-expanded="false">Aa</button>
+      <button class="mini-icon mini-type-button" data-action="typography" title="字体设置" aria-label="字体设置" aria-expanded="false">Aa</button>
       <button class="mini-icon" data-action="appearance" title="玻璃透明度" aria-label="玻璃透明度" aria-expanded="false">${icon('opacity')}</button>
       <button class="mini-icon" data-action="compact" title="紧凑模式" aria-label="紧凑模式" aria-pressed="false">${icon('compact')}</button>
       <button class="mini-icon" data-action="pin" title="置顶" aria-label="置顶" aria-pressed="true" ${options.onPin?'':'hidden'}>${icon('pin')}</button>
       <button class="mini-icon" data-action="expand" title="返回主界面" aria-label="返回主界面">${icon('expand')}</button>
       <button class="mini-icon" data-action="close" title="关闭小窗" aria-label="关闭小窗">${icon('close')}</button>
     </div></header><section class="mini-appearance" data-panel="appearance" hidden><label for="mini-glass">玻璃透明度 <output id="mini-glass-value">40%</output></label><input class="glass-range" id="mini-glass" type="range" min="0" max="100" step="1" value="40" aria-label="小窗玻璃透明度"></section>
-    <section class="mini-appearance" data-panel="typography" hidden><label for="mini-font">字体大小 <output id="mini-font-value">100%</output></label><input class="glass-range" id="mini-font" type="range" min="80" max="160" step="5" value="100" aria-label="小窗字体大小"><div class="mini-font-presets" role="group" aria-label="字号预设"><button data-font-size="100">标准</button><button data-font-size="125">大</button><button data-font-size="150">特大</button></div></section>
+    <section class="mini-appearance" data-panel="typography" hidden><div class="mini-typography-controls">
+      <div><label for="mini-font">字体大小 <output id="mini-font-value">100%</output></label><input class="glass-range" id="mini-font" type="range" min="80" max="160" step="5" value="100" aria-label="小窗字体大小"><div class="mini-font-presets" role="group" aria-label="字号预设"><button data-font-size="100">标准</button><button data-font-size="125">大</button><button data-font-size="150">特大</button></div></div>
+      <div><label for="mini-weight">字体粗细 <output id="mini-weight-value">550</output></label><input class="glass-range" id="mini-weight" type="range" min="300" max="800" step="50" value="550" aria-label="小窗字体粗细"><div class="mini-font-presets" role="group" aria-label="字重预设"><button data-font-weight="350">细</button><button data-font-weight="550">标准</button><button data-font-weight="700">粗</button></div></div>
+    </div></section>
     <div class="mini-content"><div class="mini-income-block"><span class="mini-label">今日已赚</span><button class="mini-income" data-action="unit" title="点击切换元、毛、分" aria-label="切换金额单位"><span class="mini-symbol">¥</span><span class="mini-amount">0.00</span></button></div>
     <div class="mini-time-block"><span class="mini-label mini-count-label">距离下班</span><span class="mini-countdown">00:00:00</span></div></div>
     <div class="mini-progress" role="progressbar" aria-label="今日工作进度" aria-valuemin="0" aria-valuemax="100"><span></span></div>
@@ -30,10 +33,13 @@ export function mountMini(doc,options={}){
     setText('#mini-glass-value',`${settings.glassTransparency}%`);q('#mini-glass').value=settings.glassTransparency;
     setText('#mini-font-value',`${settings.miniFontSize}%`);q('#mini-font').value=settings.miniFontSize;
     doc.documentElement.style.setProperty('--mini-font-scale',settings.miniFontSize/100);
+    setText('#mini-weight-value',settings.miniFontWeight);q('#mini-weight').value=settings.miniFontWeight;
+    doc.documentElement.style.setProperty('--mini-font-weight',settings.miniFontWeight);
     const digits=state.amount.replace(/[^0-9]/g,'').length;
     const separators=state.amount.replace(/[0-9]/g,'').length;
     q('.mini-income').style.setProperty('--mini-income-em',digits*.62+separators*.3+.7);
     doc.querySelectorAll('[data-font-size]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.fontSize)===settings.miniFontSize)));
+    doc.querySelectorAll('[data-font-weight]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.fontWeight)===settings.miniFontWeight)));
     setText('.mini-status span',state.status);q('.mini-status').dataset.state=state.active?'active':state.pause?'pause':'rest';
     setText('.mini-symbol',state.symbol);setText('.mini-amount',state.amount);setText('.mini-count-label',state.label);setText('.mini-countdown',state.countdown);setText('.mini-hours',`${state.hours} / ${state.dailyHours} 小时`);
     q('.mini-income').classList.toggle('non-yuan',state.unit!=='yuan');q('.mini-income').classList.toggle('long',state.amount.length>8);
@@ -47,7 +53,7 @@ export function mountMini(doc,options={}){
   function storageNotice(saved){if(!saved){setText('.mini-notice','设置仅本次生效');q('.mini-notice').hidden=false;win.setTimeout(()=>{q('.mini-notice').hidden=true;},2500);}}
   function commit(next){const saved=session.set(next);appearancePreview={};options.onSettingsChange?.(next,saved);storageNotice(saved);render();}
   function setUnit(unit){commit({...currentSettings(),unit});}
-  for(const [selector,field] of [['#mini-glass','glassTransparency'],['#mini-font','miniFontSize']]){
+  for(const [selector,field] of [['#mini-glass','glassTransparency'],['#mini-font','miniFontSize'],['#mini-weight','miniFontWeight']]){
     q(selector).addEventListener('input',event=>{appearancePreview={...appearancePreview,[field]:Number(event.target.value)};const next=currentSettings();session.preview(next);options.onAppearancePreview?.(next);render();});
     q(selector).addEventListener('change',()=>commit(currentSettings()));
   }
@@ -57,6 +63,7 @@ export function mountMini(doc,options={}){
     try{
       if(['appearance','typography'].includes(button.dataset.action)){const popup=q(`[data-panel="${button.dataset.action}"]`);popup.hidden=!popup.hidden;button.setAttribute('aria-expanded',String(!popup.hidden));return;}
       if(button.dataset.fontSize){commit({...currentSettings(),miniFontSize:Number(button.dataset.fontSize)});return;}
+      if(button.dataset.fontWeight){commit({...currentSettings(),miniFontWeight:Number(button.dataset.fontWeight)});return;}
       if(button.dataset.unit){setUnit(button.dataset.unit);return;}
       if(button.dataset.action==='unit'){const values=['yuan','mao','fen'],current=currentSettings().unit;setUnit(values[(values.indexOf(current)+1)%3]);}
       if(button.dataset.action==='close')options.onClose?.();

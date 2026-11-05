@@ -24,5 +24,15 @@ body[data-compact=true] .mini-font-presets{display:none}
 .mini-font-presets button{flex:1;padding:3px 5px;border-radius:7px;background:#f3e9ef;font-size:11px;font-weight:550}
 .mini-font-presets button[aria-pressed=true]{background:#dfb0c6;color:#4e3043}
 .mini-card .mini-appearance label{font-size:12px;font-weight:550}
+.mini-income,.mini-countdown{font-weight:var(--mini-font-weight,550);transition:font-size .16s ease,font-weight .16s ease}
+.mini-symbol{font-weight:inherit}
+.mini-status,.mini-label,.mini-footer,.mini-units button{font-weight:clamp(300,var(--mini-font-weight,550),650)}
+.mini-appearance{max-height:calc(100% - 54px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;-webkit-app-region:no-drag}
+.mini-typography-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body[data-compact=true] .mini-appearance{max-height:calc(100% - 40px)}
+body[data-compact=true] .mini-typography-controls{grid-template-columns:1fr 1fr;gap:8px}
+body[data-compact=true] .mini-card .mini-appearance label{font-size:10px}
+@media(max-height:220px){.mini-font-presets{display:none}.mini-typography-controls{gap:5px}}
+@media(max-width:300px){.mini-font-presets{display:none}}
 .mini-notice{position:absolute;bottom:8px;left:12px;right:12px;padding:4px 8px;text-align:center;border-radius:99px;background:#fff;color:#ad6989;font-size:10px;box-shadow:0 2px 10px #6c436315}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
